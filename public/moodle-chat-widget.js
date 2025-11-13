@@ -338,6 +338,81 @@
                 cursor: not-allowed;
             }
 
+            /* Custom confirmation dialog */
+            .moodle-chat-confirm-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000000;
+                animation: fadeIn 0.2s ease-out;
+            }
+
+            .moodle-chat-confirm-overlay.active {
+                display: flex;
+            }
+
+            .moodle-chat-confirm-dialog {
+                background: white;
+                border-radius: 8px;
+                padding: 24px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.3s ease-out;
+            }
+
+            .moodle-chat-confirm-message {
+                font-size: 16px;
+                color: #333;
+                margin-bottom: 24px;
+                line-height: 1.5;
+                text-align: center;
+            }
+
+            .moodle-chat-confirm-buttons {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+            }
+
+            .moodle-chat-confirm-btn {
+                padding: 10px 24px;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-family: inherit;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .moodle-chat-confirm-btn.primary {
+                background: ${primaryColor};
+                color: white;
+            }
+
+            .moodle-chat-confirm-btn.primary:hover {
+                opacity: 0.9;
+                transform: translateY(-1px);
+            }
+
+            .moodle-chat-confirm-btn.secondary {
+                background: #f5f5f5;
+                color: #666;
+            }
+
+            .moodle-chat-confirm-btn.secondary:hover {
+                background: #e0e0e0;
+            }
+
             /* Mobile responsive */
             @media (max-width: 480px) {
                 .moodle-chat-window {
@@ -352,6 +427,18 @@
                 .moodle-chat-button {
                     bottom: 15px;
                     ${position}: 15px;
+                }
+
+                .moodle-chat-confirm-dialog {
+                    padding: 20px;
+                }
+
+                .moodle-chat-confirm-buttons {
+                    flex-direction: column-reverse;
+                }
+
+                .moodle-chat-confirm-btn {
+                    width: 100%;
                 }
             }
         `;
@@ -385,16 +472,26 @@
                     </div>
                     
                     <div class="moodle-chat-input-container">
-                        <input 
-                            type="text" 
-                            class="moodle-chat-input" 
-                            id="moodleChatInput" 
+                        <input
+                            type="text"
+                            class="moodle-chat-input"
+                            id="moodleChatInput"
                             placeholder="${placeholder}"
                             autocomplete="off"
                         />
                         <button class="moodle-chat-send" id="moodleChatSend" aria-label="Send message">
                             ➤
                         </button>
+                    </div>
+                </div>
+
+                <div class="moodle-chat-confirm-overlay" id="moodleChatConfirmOverlay">
+                    <div class="moodle-chat-confirm-dialog">
+                        <div class="moodle-chat-confirm-message" id="moodleChatConfirmMessage"></div>
+                        <div class="moodle-chat-confirm-buttons">
+                            <button class="moodle-chat-confirm-btn secondary" id="moodleChatConfirmCancel">Cancel</button>
+                            <button class="moodle-chat-confirm-btn primary" id="moodleChatConfirmOk">Clear Chat</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -412,15 +509,29 @@
         var clearBtn = document.getElementById('moodleChatClear');
         var sendBtn = document.getElementById('moodleChatSend');
         var input = document.getElementById('moodleChatInput');
+        var confirmOverlay = document.getElementById('moodleChatConfirmOverlay');
+        var confirmCancel = document.getElementById('moodleChatConfirmCancel');
+        var confirmOk = document.getElementById('moodleChatConfirmOk');
 
         button.addEventListener('click', toggleChat);
         closeBtn.addEventListener('click', closeChat);
-        clearBtn.addEventListener('click', clearChat);
+        clearBtn.addEventListener('click', showClearConfirmation);
         sendBtn.addEventListener('click', sendMessage);
         
         input.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
+            }
+        });
+
+        // Confirmation dialog listeners
+        confirmCancel.addEventListener('click', hideConfirmation);
+        confirmOk.addEventListener('click', confirmClearChat);
+        
+        // Close on overlay click
+        confirmOverlay.addEventListener('click', function(e) {
+            if (e.target === confirmOverlay) {
+                hideConfirmation();
             }
         });
     }
@@ -462,17 +573,35 @@
         isOpen = false;
     }
 
-    // Clear chat (new conversation)
+    // Show clear confirmation dialog
+    function showClearConfirmation() {
+        var overlay = document.getElementById('moodleChatConfirmOverlay');
+        var message = document.getElementById('moodleChatConfirmMessage');
+        message.textContent = 'Clear chat history and start a new conversation?';
+        overlay.classList.add('active');
+    }
+
+    // Hide confirmation dialog
+    function hideConfirmation() {
+        var overlay = document.getElementById('moodleChatConfirmOverlay');
+        overlay.classList.remove('active');
+    }
+
+    // Confirm and clear chat
+    function confirmClearChat() {
+        hideConfirmation();
+        conversationHistory = [];
+        saveConversationHistory();
+        
+        var messagesDiv = document.getElementById('moodleChatMessages');
+        messagesDiv.innerHTML = '<div class="moodle-chat-typing" id="moodleChatTyping"><span></span><span></span><span></span></div>';
+        
+        addBotMessage(welcomeMessage);
+    }
+
+    // Legacy clear chat function (for public API)
     function clearChat() {
-        if (confirm('Clear chat history and start a new conversation?')) {
-            conversationHistory = [];
-            saveConversationHistory();
-            
-            var messagesDiv = document.getElementById('moodleChatMessages');
-            messagesDiv.innerHTML = '<div class="moodle-chat-typing" id="moodleChatTyping"><span></span><span></span><span></span></div>';
-            
-            addBotMessage(welcomeMessage);
-        }
+        showClearConfirmation();
     }
 
     // Send message
