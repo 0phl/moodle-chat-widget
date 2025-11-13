@@ -155,28 +155,28 @@
 
             .moodle-chat-header-actions {
                 display: flex;
-                gap: 8px;
+                gap: 12px;
                 align-items: center;
             }
 
-            .moodle-chat-action-btn {
-                background: none;
-                border: none;
+            .moodle-chat-clear-btn {
+                background: rgba(255,255,255,0.1);
+                border: 1px solid rgba(255,255,255,0.3);
                 color: white;
-                font-size: 20px;
+                font-size: 12px;
                 cursor: pointer;
-                padding: 0;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                padding: 6px 12px;
                 border-radius: 4px;
-                transition: background 0.2s;
+                transition: all 0.2s;
+                font-family: inherit;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
 
-            .moodle-chat-action-btn:hover {
+            .moodle-chat-clear-btn:hover {
                 background: rgba(255,255,255,0.2);
+                border-color: rgba(255,255,255,0.5);
             }
 
             .moodle-chat-close {
@@ -371,8 +371,7 @@
                     <div class="moodle-chat-header">
                         <h3>${botName}</h3>
                         <div class="moodle-chat-header-actions">
-                            <button class="moodle-chat-action-btn" id="moodleChatClear" aria-label="Clear chat" title="Clear chat">🗑️</button>
-                            <button class="moodle-chat-action-btn" id="moodleChatEnd" aria-label="End chat" title="End chat">🚪</button>
+                            <button class="moodle-chat-clear-btn" id="moodleChatClear" aria-label="Clear chat">Clear</button>
                             <button class="moodle-chat-close" id="moodleChatClose" aria-label="Close chat">×</button>
                         </div>
                     </div>
@@ -409,14 +408,12 @@
         var button = document.getElementById('moodleChatButton');
         var closeBtn = document.getElementById('moodleChatClose');
         var clearBtn = document.getElementById('moodleChatClear');
-        var endBtn = document.getElementById('moodleChatEnd');
         var sendBtn = document.getElementById('moodleChatSend');
         var input = document.getElementById('moodleChatInput');
 
         button.addEventListener('click', toggleChat);
         closeBtn.addEventListener('click', closeChat);
         clearBtn.addEventListener('click', clearChat);
-        endBtn.addEventListener('click', endChat);
         sendBtn.addEventListener('click', sendMessage);
         
         input.addEventListener('keypress', function(e) {
@@ -464,7 +461,7 @@
 
     // Clear chat (new conversation)
     function clearChat() {
-        if (confirm('Are you sure you want to clear the chat history and start a new conversation?')) {
+        if (confirm('Clear chat history and start a new conversation?')) {
             conversationHistory = [];
             saveConversationHistory();
             
@@ -472,20 +469,6 @@
             messagesDiv.innerHTML = '<div class="moodle-chat-typing" id="moodleChatTyping"><span></span><span></span><span></span></div>';
             
             addBotMessage(welcomeMessage);
-        }
-    }
-
-    // End chat (clear and close)
-    function endChat() {
-        if (confirm('Are you sure you want to end the chat? This will clear the conversation history and close the chat window.')) {
-            conversationHistory = [];
-            saveConversationHistory();
-            
-            var messagesDiv = document.getElementById('moodleChatMessages');
-            messagesDiv.innerHTML = '<div class="moodle-chat-typing" id="moodleChatTyping"><span></span><span></span><span></span></div>';
-            
-            addBotMessage(welcomeMessage);
-            closeChat();
         }
     }
 
@@ -631,7 +614,6 @@
     window.moodleChat.close = closeChat;
     window.moodleChat.send = sendMessage;
     window.moodleChat.clear = clearChat;
-    window.moodleChat.end = endChat;
     window.moodleChat.clearHistory = function() {
         conversationHistory = [];
         saveConversationHistory();
