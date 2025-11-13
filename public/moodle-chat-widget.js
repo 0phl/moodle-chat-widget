@@ -33,6 +33,8 @@
             addBotMessage(welcomeMessage);
         } else {
             renderConversationHistory();
+            // Scroll to bottom after rendering history
+            scrollToBottom();
         }
     }
 
@@ -442,10 +444,11 @@
         button.textContent = '✕';
         isOpen = true;
 
-        // Focus input
+        // Scroll to bottom and focus input
         setTimeout(function() {
+            scrollToBottom();
             document.getElementById('moodleChatInput').focus();
-        }, 300);
+        }, 100);
     }
 
     // Close chat
@@ -546,8 +549,14 @@
             messageDiv.innerHTML = '<div class="moodle-chat-message-content">' + escapeHtml(msg.content) + '</div>';
             messagesDiv.insertBefore(messageDiv, typingIndicator);
         });
-        
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Scroll to bottom of messages
+    function scrollToBottom() {
+        var messagesDiv = document.getElementById('moodleChatMessages');
+        if (messagesDiv) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
     }
 
     // Show typing indicator
